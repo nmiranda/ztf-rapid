@@ -1,0 +1,1 @@
+conda create --name ztf_rapid python=3.5 astropy pandas matplotlib scikit-learn tensorflow scipy

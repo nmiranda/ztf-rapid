@@ -1,0 +1,67 @@
+absl-py @ file:///home/conda/feedstock_root/build_artifacts/absl-py_1606235483308/work
+astor @ file:///home/conda/feedstock_root/build_artifacts/astor_1593610464257/work
+astropy==4.0.4
+-e git+git@github.com:nmiranda/astrorapid.git@0a4126831f4d54d20e5d9a33e8e7c5308c8a8989#egg=astrorapid
+backports.functools-lru-cache==1.6.1
+cached-property @ file:///tmp/build/80754af9/cached-property_1600785575025/work
+celerite @ file:///home/conda/feedstock_root/build_artifacts/celerite_1602551585133/work
+certifi==2020.12.5
+click==7.1.2
+cloudpickle @ file:///home/conda/feedstock_root/build_artifacts/cloudpickle_1598400192773/work
+cycler==0.10.0
+decorator==4.4.2
+extinction==0.4.0
+gast==0.2.2
+google-pasta==0.2.0
+grpcio @ file:///home/conda/feedstock_root/build_artifacts/grpcio_1607005023880/work
+h5py==2.10.0
+imbalanced-learn @ file:///home/conda/feedstock_root/build_artifacts/imbalanced-learn_1592145894352/work
+importlib-metadata @ file:///home/conda/feedstock_root/build_artifacts/importlib-metadata_1606885585839/work
+ipykernel @ file:///home/conda/feedstock_root/build_artifacts/ipykernel_1607737221813/work/dist/ipykernel-5.4.2-py3-none-any.whl
+ipython==5.8.0
+ipython-genutils==0.2.0
+joblib @ file:///home/conda/feedstock_root/build_artifacts/joblib_1601671685479/work
+jupyter-client @ file:///home/conda/feedstock_root/build_artifacts/jupyter_client_1598486169312/work
+jupyter-core @ file:///home/conda/feedstock_root/build_artifacts/jupyter_core_1605735003973/work
+Keras==2.3.1
+Keras-Applications==1.0.8
+Keras-Preprocessing==1.1.0
+keras-tcn==3.1.1
+kiwisolver @ file:///home/conda/feedstock_root/build_artifacts/kiwisolver_1604322294766/work
+Markdown @ file:///home/conda/feedstock_root/build_artifacts/markdown_1603668500820/work
+matplotlib @ file:///home/conda/feedstock_root/build_artifacts/matplotlib-suite_1605180227365/work
+numpy @ file:///home/conda/feedstock_root/build_artifacts/numpy_1604945999799/work
+olefile @ file:///home/conda/feedstock_root/build_artifacts/olefile_1602866521163/work
+opt-einsum==0+untagged.61.gd905544.dirty
+pandas==1.1.5
+pexpect @ file:///home/conda/feedstock_root/build_artifacts/pexpect_1602535608087/work
+pickleshare @ file:///home/conda/feedstock_root/build_artifacts/pickleshare_1602536217715/work
+Pillow @ file:///home/conda/feedstock_root/build_artifacts/pillow_1604748700260/work
+prompt-toolkit==1.0.15
+protobuf==3.14.0
+ptyprocess==0.6.0
+Pygments @ file:///home/conda/feedstock_root/build_artifacts/pygments_1607352093725/work
+pyparsing==2.4.7
+python-dateutil==2.8.1
+python-dotenv @ file:///home/conda/feedstock_root/build_artifacts/python-dotenv_1603979006023/work
+pytz @ file:///home/conda/feedstock_root/build_artifacts/pytz_1604321279890/work
+PyYAML==5.3.1
+pyzmq==20.0.0
+scikit-learn @ file:///home/conda/feedstock_root/build_artifacts/scikit-learn_1605985617292/work
+scipy @ file:///home/conda/feedstock_root/build_artifacts/scipy_1604304777848/work
+simplegeneric==0.8.1
+six @ file:///home/conda/feedstock_root/build_artifacts/six_1590081179328/work
+tensorboard==1.15.0
+tensorflow==1.15.0
+tensorflow-estimator==1.15.1
+tensorflow-probability==0.8.0rc0
+termcolor==1.1.0
+threadpoolctl @ file:///tmp/tmp79xdzxkt/threadpoolctl-2.1.0-py3-none-any.whl
+tornado @ file:///home/conda/feedstock_root/build_artifacts/tornado_1604105020994/work
+traitlets==4.3.3
+wcwidth @ file:///home/conda/feedstock_root/build_artifacts/wcwidth_1600965781394/work
+Werkzeug==0.16.1
+wrapt @ file:///home/conda/feedstock_root/build_artifacts/wrapt_1606141201414/work
+zipp @ file:///home/conda/feedstock_root/build_artifacts/zipp_1603668650351/work
+# Editable install with no version control (ztfrapid==0.1.0)
+-e /home/nmiranda/workspace/ztf_rapid/src
