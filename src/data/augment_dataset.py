@@ -9,7 +9,7 @@ import numpy as np
 @click.option('--rand', default=42, help='Random state integer.')
 def main(input_dirpath, output_filepath, rand):
 
-    X_train_res, X_test, y_train_res, y_test = augment_datasets(input_dirpathm, random_state=rand)
+    X_train_res, X_test, y_train_res, y_test = augment_datasets(input_dirpath, random_state=rand)
 
     np.savez(
         output_filepath,
