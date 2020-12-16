@@ -95,7 +95,7 @@ https://conda.anaconda.org/conda-forge/linux-64/wrapt-1.12.1-py36h1d69622_2.tar.
 https://conda.anaconda.org/conda-forge/linux-64/astropy-4.0.4-py36h8f6f2f9_0.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/celerite-0.4.0-py36h7c3b610_1.tar.bz2
 https://repo.anaconda.com/pkgs/main/linux-64/gst-plugins-base-1.14.0-hbbd80ab_1.conda
-https://conda.anaconda.org/conda-forge/linux-64/h5py-3.1.0-nompi_py36hc1bc4f5_100.tar.bz2
+https://conda.anaconda.org/conda-forge/linux-64/h5py-2.10.0-nompi_py36ha233d17_105.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/jupyter_core-4.7.0-py36h5fab9bb_0.tar.bz2
 https://conda.anaconda.org/conda-forge/noarch/markdown-3.3.3-pyh9f0ad1d_0.tar.bz2
 https://conda.anaconda.org/conda-forge/noarch/opt_einsum-3.3.0-py_0.tar.bz2
