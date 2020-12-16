@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import os
+
 import click
 import numpy as np
 from ztfrapid.ztf_rapid import train

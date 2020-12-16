@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-import click
-from ztfrapid.ztf_rapid import augment_datasets
-import numpy as np
 import os
+
+import click
+import numpy as np
+from ztfrapid.ztf_rapid import augment_datasets
+
 
 @click.command()
 @click.argument('input_dirpath', type=click.Path(exists=True))
