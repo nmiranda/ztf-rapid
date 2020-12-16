@@ -105,7 +105,7 @@ def make_datasets(filepath, savedir):
 
     return X_train, X_test, y_train, y_test
 
-def augment_datasets(input_dirpath):
+def augment_datasets(input_dirpath, random_state):
 
     preparearrays = PrepareTrainingSetArrays(
         reread_data=False,
@@ -130,7 +130,7 @@ def augment_datasets(input_dirpath):
 
     X_train_2d = X_train.transpose(0,2,1).reshape(-1,X_train.shape[2]*X_train.shape[1])
 
-    ros = RandomOverSampler(random_state=42)
+    ros = RandomOverSampler(random_state=random_state)
     X_res, y_res = ros.fit_resample(X_train_2d, labels_train)
 
     y_train_res = y_train[ros.sample_indices_]
@@ -145,12 +145,12 @@ def train(X_train_res, X_test, y_train_res, y_test, output_dirpath):
     except FileExistsError as e:
         print(e)
     model = train_model(
-        X_train_res, 
-        X_test, 
-        y_train_res, 
-        y_test, 
-        fig_dir=output_dirpath, 
-        epochs=2, 
+        X_train_res,
+        X_test,
+        y_train_res,
+        y_test,
+        fig_dir=output_dirpath,
+        epochs=25,
         retrain=True
         # retrain=False
     )

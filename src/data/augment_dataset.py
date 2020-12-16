@@ -6,9 +6,10 @@ import numpy as np
 @click.command()
 @click.argument('input_dirpath', type=click.Path(exists=True))
 @click.argument('output_filepath', type=click.Path())
-def main(input_dirpath, output_filepath):
+@click.option('--rand', default=42, help='Random state integer.')
+def main(input_dirpath, output_filepath, rand):
 
-    X_train_res, X_test, y_train_res, y_test = augment_datasets(input_dirpath)
+    X_train_res, X_test, y_train_res, y_test = augment_datasets(input_dirpathm, random_state=rand)
 
     np.savez(
         output_filepath,

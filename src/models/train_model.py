@@ -8,7 +8,8 @@ from ztfrapid.ztf_rapid import train
 @click.argument('input_filepath', type=click.Path(exists=True))
 @click.argument('output_filepath', type=click.Path())
 @click.argument('output_dirpath', type=click.Path())
-def main(input_filepath, output_filepath, output_dirpath):
+@click.option('--rand', default=42, help='Random state integer.')
+def main(input_filepath, output_filepath, output_dirpath, rand):
     
     files = np.load(input_filepath)
     X_train_res = files['X_train_res']
