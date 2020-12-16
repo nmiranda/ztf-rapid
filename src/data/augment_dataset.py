@@ -2,12 +2,15 @@
 import click
 from ztfrapid.ztf_rapid import augment_datasets
 import numpy as np
+import os
 
 @click.command()
 @click.argument('input_dirpath', type=click.Path(exists=True))
 @click.argument('output_filepath', type=click.Path())
 @click.option('--rand', default=42, help='Random state integer.')
 def main(input_dirpath, output_filepath, rand):
+
+    os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
 
     X_train_res, X_test, y_train_res, y_test = augment_datasets(input_dirpath, random_state=rand)
 
