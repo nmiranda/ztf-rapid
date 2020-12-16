@@ -8,7 +8,7 @@ from ztfrapid.ztf_rapid import train
 @click.argument('input_filepath', type=click.Path(exists=True))
 @click.argument('output_filepath', type=click.Path())
 @click.argument('output_dirpath', type=click.Path())
-def main(input_filepath, output_filepath, output_dirpath, rand):
+def main(input_filepath, output_filepath, output_dirpath):
 
     os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
     
