@@ -150,7 +150,8 @@ def train(X_train_res, X_test, y_train_res, y_test, output_dirpath):
         y_train_res,
         y_test,
         fig_dir=output_dirpath,
-        epochs=25,
+        # epochs=25,
+        epochs=2,
         retrain=True
         # retrain=False
     )
