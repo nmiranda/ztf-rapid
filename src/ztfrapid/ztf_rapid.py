@@ -10,6 +10,7 @@ from astrorapid.neural_network_model import train_model
 from astrorapid.prepare_training_set import PrepareTrainingSetArrays
 from astrorapid.process_light_curves import InputLightCurve
 from imblearn.over_sampling import RandomOverSampler
+from imblearn.under_sampling import RandomUnderSampler
 from sklearn import metrics
 
 CLASS_MAP = {
@@ -107,7 +108,7 @@ def make_datasets(filepath, savedir):
 
     return X_train, X_test, y_train, y_test
 
-def augment_datasets(input_dirpath, random_state):
+def augment_datasets(input_dirpath, random_state, strategy='oversample'):
 
     preparearrays = PrepareTrainingSetArrays(
         reread_data=False,
@@ -132,7 +133,12 @@ def augment_datasets(input_dirpath, random_state):
 
     X_train_2d = X_train.transpose(0,2,1).reshape(-1,X_train.shape[2]*X_train.shape[1])
 
-    ros = RandomOverSampler(random_state=random_state)
+    if strategy == 'oversample':
+        ros = RandomOverSampler(random_state=random_state)
+    elif strategy == 'undersample':
+        ros = RandomUnderSampler(random_state=random_state)
+    else:
+        raise ValueError('Strategy non valid.')
     X_res, y_res = ros.fit_resample(X_train_2d, labels_train)
 
     y_train_res = y_train[ros.sample_indices_]

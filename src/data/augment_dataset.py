@@ -10,11 +10,16 @@ from ztfrapid.ztf_rapid import augment_datasets
 @click.argument('input_dirpath', type=click.Path(exists=True))
 @click.argument('output_filepath', type=click.Path())
 @click.option('--rand', default=42, help='Random state integer.')
-def main(input_dirpath, output_filepath, rand):
+@click.option('--strategy', type=click.Choice(['undersample', 'oversample']), required=True)
+def main(input_dirpath, output_filepath, rand, strategy):
 
     os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
 
-    X_train_res, X_test, y_train_res, y_test, objids_test, class_names = augment_datasets(input_dirpath, random_state=rand)
+    X_train_res, X_test, y_train_res, y_test, objids_test, class_names = augment_datasets(
+        input_dirpath, 
+        random_state=rand, 
+        strategy=strategy
+        )
 
     np.savez(
         output_filepath,
