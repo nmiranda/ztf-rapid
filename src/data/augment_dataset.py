@@ -14,7 +14,7 @@ def main(input_dirpath, output_filepath, rand):
 
     os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
 
-    X_train_res, X_test, y_train_res, y_test = augment_datasets(input_dirpath, random_state=rand)
+    X_train_res, X_test, y_train_res, y_test, objids_test, class_names = augment_datasets(input_dirpath, random_state=rand)
 
     np.savez(
         output_filepath,
@@ -22,9 +22,9 @@ def main(input_dirpath, output_filepath, rand):
         X_test=X_test,
         y_train_res=y_train_res,
         y_test=y_test,
+        objids_test=objids_test,
+        class_names=class_names,
     )
-
-    
 
 if __name__ == '__main__':
     main()

@@ -2,6 +2,7 @@
 import os
 from copy import copy
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from astrorapid.ANTARES_object.constants import GOOD_PHOTFLAG, TRIGGER_PHOTFLAG
@@ -9,6 +10,7 @@ from astrorapid.neural_network_model import train_model
 from astrorapid.prepare_training_set import PrepareTrainingSetArrays
 from astrorapid.process_light_curves import InputLightCurve
 from imblearn.over_sampling import RandomOverSampler
+from sklearn import metrics
 
 CLASS_MAP = {
     1: 'SN Ia',
@@ -136,7 +138,7 @@ def augment_datasets(input_dirpath, random_state):
     y_train_res = y_train[ros.sample_indices_]
     X_train_res = X_train[ros.sample_indices_]
 
-    return X_train_res, X_test, y_train_res, y_test
+    return X_train_res, X_test, y_train_res, y_test, objids_test, class_names
 
 def train(X_train_res, X_test, y_train_res, y_test, output_dirpath):
 
@@ -160,8 +162,55 @@ def train(X_train_res, X_test, y_train_res, y_test, output_dirpath):
 
 def predict(model, X_test):
 
-    return model.predict(X_test)
+    #return model.predict(X_test)
+    return model(X_test, training=False).numpy()
 
-def aggregate_runs():
-    pass
+def count_results_for_class(results, class_):
+    return np.sum(results.to_numpy()[:,1:] == class_, axis=1)
+
+def runs_result_dataframe(y_test, y_pred_list, objids_test):
     
+    y_pred_1d_list = [np.argmax(y_pred[:,-1,:], axis=1) for y_pred in y_pred_list]
+    res_index = ["model_%s" % i for i in range(1,len(y_pred_1d_list)+1)]
+    res_vals = pd.DataFrame({k: v for k, v in zip(res_index, y_pred_1d_list)})
+    res_head = pd.DataFrame({
+        'objid': objids_test,
+        'class': np.argmax(y_test[:,0,:], axis=1),
+    })
+    res = pd.concat((res_head, res_vals), axis=1)
+    res = res.set_index('objid')
+
+    return res
+
+def result_class_distribution(results, class_names):
+    
+    res_dist = pd.DataFrame({
+            class_: count_results_for_class(results, idx+1) / len(class_names) \
+                for idx, class_ in enumerate(class_names)
+            }, 
+        index=results.index)
+    
+    return res_dist
+    
+def true_pred_ensemble(y_test, y_pred_list, objids_test, class_names, cutoff=0.75):
+
+    res = runs_result_dataframe(y_test, y_pred_list, objids_test)
+    res_dist = result_class_distribution(res, class_names)
+
+    mask_cut_fraction = np.any(res_dist.to_numpy() >= cutoff, axis=1)
+    pred_cut = res_dist.iloc[mask_cut_fraction].to_numpy().argmax(axis=1) + 1
+    test_cut = res.iloc[mask_cut_fraction].loc[:,'class'].to_numpy()
+
+    return test_cut, pred_cut
+
+def plot_confusion_matrix(y_true, y_pred, class_names):
+
+    cm = metrics.confusion_matrix(
+        y_true, 
+        y_pred,
+        normalize='true'
+    )
+    cmd = metrics.ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+    return cmd.plot(
+        cmap=plt.cm.Blues, 
+    )
