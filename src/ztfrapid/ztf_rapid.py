@@ -88,7 +88,7 @@ def make_datasets(filepath, savedir):
 
     preparearrays = PrepareTrainingSetArrays(
         reread_data=False,
-        class_name_map=CLASS_MAP, 
+        class_name_map=CLASS_MAP,
         training_set_dir=os.path.join(savedir, 'training'),
         data_dir=os.path.join(savedir, 'data'),
         save_dir=os.path.join(savedir, 'save'),
@@ -106,7 +106,7 @@ def make_datasets(filepath, savedir):
     timesX_train, timesX_test, orig_lc_train, orig_lc_test, \
     objids_train, objids_test = preparearrays.prepare_training_set_arrays(class_nums=tuple(CLASS_MAP.keys()))
 
-    return X_train, X_test, y_train, y_test
+    return X_train, X_test, y_train, y_test, objids_test, class_names
 
 def augment_datasets(input_dirpath, random_state, strategy='oversample'):
 

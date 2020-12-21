@@ -23,9 +23,9 @@ def main(input_dirpath, output_filepath, rand, strategy):
 
     np.savez(
         output_filepath,
-        X_train_res=X_train_res,
+        X_train=X_train_res,
         X_test=X_test,
-        y_train_res=y_train_res,
+        y_train=y_train_res,
         y_test=y_test,
         objids_test=objids_test,
         class_names=class_names,

@@ -1,0 +1,3 @@
+make-dataset /home/nmiranda/workspace/ztf_rapid/data/raw/rcf_marshallc_sncosmo_200114_2018classupdate_addedcv.pkl /home/nmiranda/workspace/ztf_rapid/data/interim/test /home/nmiranda/workspace/ztf_rapid/data/processed/test_none/test_none.npz
+
+train-model /home/nmiranda/workspace/ztf_rapid/data/processed/test_none/test_none.npz /home/nmiranda/workspace/ztf_rapid/models/test_none/test_none.hdf5 /home/nmiranda/workspace/ztf_rapid/reports/figures/test_none

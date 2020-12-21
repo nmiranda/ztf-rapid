@@ -15,12 +15,12 @@ def main(input_filepath, output_filepath, output_dirpath):
     os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
     
     files = np.load(input_filepath)
-    X_train_res = files['X_train_res']
+    X_train = files['X_train']
     X_test = files['X_test']
-    y_train_res = files['y_train_res']
+    y_train = files['y_train']
     y_test = files['y_test']
 
-    model = train(X_train_res, X_test, y_train_res, y_test, output_dirpath)
+    model = train(X_train, X_test, y_train, y_test, output_dirpath)
 
     model.save(output_filepath)
 
