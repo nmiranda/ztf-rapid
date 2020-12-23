@@ -12,6 +12,7 @@ from astrorapid.process_light_curves import InputLightCurve
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn import metrics
+from sklearn.preprocessing import MinMaxScaler
 
 CLASS_MAP = {
     1: 'SN Ia',
@@ -146,22 +147,31 @@ def augment_datasets(input_dirpath, random_state, strategy='oversample'):
 
     return X_train_res, X_test, y_train_res, y_test, objids_test, class_names
 
-def train(X_train_res, X_test, y_train_res, y_test, output_dirpath):
+def scale_3d(array):
+
+    orig_shape = array.shape
+    scaler = MinMaxScaler()
+    array_normalized = scaler.fit_transform(array.reshape((orig_shape[0],-1))).reshape(orig_shape)
+    return array_normalized
+
+def train(X_train, X_test, y_train, y_test, output_dirpath):
 
     try:
         os.mkdir(output_dirpath)
     except FileExistsError as e:
         print(e)
     model = train_model(
-        X_train_res,
-        X_test,
-        y_train_res,
+        scale_3d(X_train),
+        scale_3d(X_test),
+        y_train,
         y_test,
         fig_dir=output_dirpath,
         # epochs=25,
         epochs=2,
-        retrain=True
-        # retrain=False
+        retrain=True,
+        # retrain=False,
+        # workers=1,
+        # use_multiprocessing=True,
     )
 
     return model
