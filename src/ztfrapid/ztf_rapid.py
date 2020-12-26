@@ -161,8 +161,8 @@ def train(X_train, X_test, y_train, y_test, output_dirpath):
     except FileExistsError as e:
         print(e)
     model = train_model(
-        scale_3d(X_train),
-        scale_3d(X_test),
+        X_train,
+        X_test,
         y_train,
         y_test,
         fig_dir=output_dirpath,
