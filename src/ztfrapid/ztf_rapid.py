@@ -11,6 +11,7 @@ from astrorapid.prepare_training_set import PrepareTrainingSetArrays
 from astrorapid.process_light_curves import InputLightCurve
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
+from kerastuner import HyperModel
 from sklearn import metrics
 from sklearn.preprocessing import MinMaxScaler
 
@@ -175,6 +176,22 @@ def train(X_train, X_test, y_train, y_test, output_dirpath):
     )
 
     return model
+
+class HyperRAPID(HyperModel):
+
+    def __init__(self, num_classes):
+        self.num_classes = num_classes
+
+    def build_model(hp):
+        
+        model = keras.Sequential()
+        model.add(layers.Masking(mask_value=0.))
+        for i in range(hp.Int('num_layers', 1, 3)):
+            model.add(layers.LSTM(hp.Choice('units', [25,50,100]), return_sequences=True, dropout=hp.Choice('dropout', [0.0,0.1,0.2,0.3])))
+        model.add(layers.TimeDistributed(Dense(self.num_classes, activation='softmax')))
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+        return model
 
 def predict(model, X_test):
 
