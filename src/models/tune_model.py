@@ -11,13 +11,13 @@ from ztfrapid import ztf_rapid
 @click.argument('output_filepath', type=click.Path())
 def main(input_filepath, report_dirpath, output_filepath):
     
-    input = np.load(input_filepath)
+    input_data = np.load(input_filepath)
 
-    y_train = input['X_train']
-    y_train = input['X_test']
-    y_train = input['y_train'][:,:,1:]
-    y_test = input['y_test'][:,:,1:]
-    num_classes = len(files['class_names'])
+    X_train = input_data['X_train']
+    X_test = input_data['X_test']
+    y_train = input_data['y_train'][:,:,1:]
+    y_test = input_data['y_test'][:,:,1:]
+    num_classes = len(input_data['class_names'])
 
     hypermodel = ztf_rapid.HyperRAPID(num_classes)
 
@@ -29,7 +29,7 @@ def main(input_filepath, report_dirpath, output_filepath):
         directory=report_dirpath,
         project_name='ztf_rapid')
 
-    tuner.search(files['X_train'], y_train, epochs=1, validation_data=(files['X_test'], y_test))
+    tuner.search(X_train, y_train, epochs=1, validation_data=(X_test, y_test))
 
     best_hp = tuner.get_best_hyperparameters()[0].values
     
