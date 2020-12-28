@@ -14,6 +14,8 @@ from imblearn.under_sampling import RandomUnderSampler
 from kerastuner import HyperModel
 from sklearn import metrics
 from sklearn.preprocessing import MinMaxScaler
+from tensorflow import keras
+from tensorflow.keras import layers
 
 CLASS_MAP = {
     1: 'SN Ia',
@@ -182,13 +184,13 @@ class HyperRAPID(HyperModel):
     def __init__(self, num_classes):
         self.num_classes = num_classes
 
-    def build_model(hp):
+    def build(self, hp):
         
         model = keras.Sequential()
         model.add(layers.Masking(mask_value=0.))
         for i in range(hp.Int('num_layers', 1, 3)):
             model.add(layers.LSTM(hp.Choice('units', [25,50,100]), return_sequences=True, dropout=hp.Choice('dropout', [0.0,0.1,0.2,0.3])))
-        model.add(layers.TimeDistributed(Dense(self.num_classes, activation='softmax')))
+        model.add(layers.TimeDistributed(layers.Dense(self.num_classes, activation='softmax')))
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
         return model

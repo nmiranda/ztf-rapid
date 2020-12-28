@@ -12,7 +12,8 @@ setup(
         'console_scripts': [
             'make-dataset=data.make_dataset:main',
             'augment-dataset=data.augment_dataset:main',
-            'train-model=models.train_model:main'
+            'train-model=models.train_model:main',
+            'tune-model=models.tune_model:main',
             ],
     }
 )

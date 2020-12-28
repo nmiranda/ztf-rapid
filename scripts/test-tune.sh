@@ -1,0 +1,1 @@
+tune-model /home/miranda/ztf-rapid/data/processed/test_none/test_none.npz /home/miranda/ztf-rapid/reports/data /home/miranda/ztf-rapid/reports/data/test.json
