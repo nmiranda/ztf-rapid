@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import click
+import numpy as np
+from kerastuner.tuners import RandomSearch
 from ztfrapid import ztf_rapid
+
 
 @click.command()
 @click.argument('input_filepath', type=click.Path(exists=True))
