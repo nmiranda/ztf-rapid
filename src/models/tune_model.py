@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import json
+
 import click
 import numpy as np
 from kerastuner.tuners import RandomSearch
