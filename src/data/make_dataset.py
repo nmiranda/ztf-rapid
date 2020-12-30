@@ -8,7 +8,6 @@ import numpy as np
 from dotenv import find_dotenv, load_dotenv
 from ztfrapid.ztf_rapid import make_datasets
 
-
 @click.command()
 @click.argument('input_filepath', type=click.Path(exists=True))
 @click.argument('output_dirpath', type=click.Path())
@@ -30,16 +29,18 @@ def main(input_filepath, output_dirpath, output_filepath):
 
     os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
 
-    X_train_res, X_test, y_train_res, y_test, objids_test, class_names = make_datasets(input_filepath, output_dirpath)
+    dataset = make_datasets(input_filepath, output_dirpath)
 
     np.savez(
         output_filepath,
-        X_train=X_train_res,
-        X_test=X_test,
-        y_train=y_train_res,
-        y_test=y_test,
-        objids_test=objids_test,
-        class_names=class_names,
+        X_train=dataset['X_train'],
+        X_test=dataset['X_test'],
+        y_train=dataset['y_train'],
+        y_test=dataset['y_test'],
+        objids_test=dataset['objids_test'],
+        orig_lc_test=np.array(dataset['orig_lc_test'], dtype=object),
+        timesX_test=dataset['timesX_test'],
+        class_names=dataset['class_names'],
     )
 
 

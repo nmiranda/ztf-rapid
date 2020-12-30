@@ -5,6 +5,8 @@ from copy import copy
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from astropy.cosmology import Planck15 as cosmo
+from astropy.table import Table
 from astrorapid.ANTARES_object.constants import GOOD_PHOTFLAG, TRIGGER_PHOTFLAG
 from astrorapid.neural_network_model import train_model
 from astrorapid.prepare_training_set import PrepareTrainingSetArrays
@@ -31,6 +33,33 @@ CLASS_MAP_REV = {
 }
 BANDS = {'p48g': "g", 'p48r': "r", 'p48i': "i"}
 BANDS_VEC = np.vectorize(lambda x: BANDS[x])
+COLPB_ZTF = {'p48g': 'tab:green', 'p48r': 'tab:red', 'p48i': 'tab:blue'}
+COLPB = {'g': 'tab:green', 'r': 'tab:red', 'i': 'tab:blue'}
+
+class HyperRAPID(HyperModel):
+
+    def __init__(self, num_classes):
+        self.num_classes = num_classes
+
+    def build(self, hp):
+        
+        model = keras.Sequential()
+        model.add(layers.Masking(mask_value=0.))
+        for i in range(hp.Int('num_layers', 1, 3)):
+            model.add(layers.LSTM(hp.Choice('units', [25,50,100]), return_sequences=True, dropout=hp.Choice('dropout', [0.0,0.1,0.2,0.3])))
+        model.add(layers.TimeDistributed(layers.Dense(self.num_classes, activation='softmax')))
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+        return model
+
+def filter_pps(lightcurve):
+    
+    mask = np.logical_or.reduce((lightcurve['band'] == 'p48r', lightcurve['band'] == 'p48g', lightcurve['band'] == 'p48i'))
+    lightcurve = lightcurve[mask]
+    mask = lightcurve['flux'] != 0.0
+    lightcurve = lightcurve[mask]
+
+    return lightcurve
 
 def to_classnumber(lc):
     class_name = lc.meta['classification']
@@ -110,7 +139,16 @@ def make_datasets(filepath, savedir):
     timesX_train, timesX_test, orig_lc_train, orig_lc_test, \
     objids_train, objids_test = preparearrays.prepare_training_set_arrays(class_nums=tuple(CLASS_MAP.keys()))
 
-    return X_train, X_test, y_train, y_test, objids_test, class_names
+    return {
+        'X_train': X_train,
+        'X_test': X_test,
+        'y_train': y_train,
+        'y_test': y_test,
+        'orig_lc_test': orig_lc_test,
+        'objids_test': objids_test,
+        'timesX_test': timesX_test,
+        'class_names': class_names,
+    }
 
 def augment_datasets(input_dirpath, random_state, strategy='oversample'):
 
@@ -179,22 +217,6 @@ def train(X_train, X_test, y_train, y_test, output_dirpath):
 
     return model
 
-class HyperRAPID(HyperModel):
-
-    def __init__(self, num_classes):
-        self.num_classes = num_classes
-
-    def build(self, hp):
-        
-        model = keras.Sequential()
-        model.add(layers.Masking(mask_value=0.))
-        for i in range(hp.Int('num_layers', 1, 3)):
-            model.add(layers.LSTM(hp.Choice('units', [25,50,100]), return_sequences=True, dropout=hp.Choice('dropout', [0.0,0.1,0.2,0.3])))
-        model.add(layers.TimeDistributed(layers.Dense(self.num_classes, activation='softmax')))
-        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-
-        return model
-
 def predict(model, X_test):
 
     #return model.predict(X_test)
@@ -249,3 +271,60 @@ def plot_confusion_matrix(y_true, y_pred, class_names):
     return cmd.plot(
         cmap=plt.cm.Blues, 
     )
+
+def get_mag(lc):
+    lc = lc[lc['flux'] > 0.0]
+    return np.array(-2.5 * np.log10(lc['flux'])+ lc['zp'])
+
+def get_mag_err(lc):
+    lc = lc[lc['flux'] > 0.0]
+    return np.array(2.5 / np.log(10) * lc['fluxerr'] / lc['flux'])
+
+def ztf_noisify(lightcurve, new_z):
+    
+    this_lc = copy(lightcurve)
+    
+    this_lc = this_lc[this_lc['flux'] > 0.0]
+    
+    if len(this_lc) == 0:
+        return Table()
+    
+    this_lc['maglim'] = 20.8
+    this_lc['maglim'][this_lc['band']=='p48g'] = 20.5
+    this_lc['maglim'][this_lc['band']=='p48i'] = 20.2
+    
+    mag = -2.5 * np.log10(this_lc['flux'])+ this_lc['zp']
+    magerr = 2.5 / np.log(10) * this_lc['fluxerr'] / this_lc['flux']
+    maglim = this_lc['maglim']
+    truez = this_lc.meta['z']
+
+    delta_m = cosmo.distmod(new_z)-cosmo.distmod(truez)
+    
+    k_exp = np.log(18+1) / (maglim-17)
+    k_exp *= 0.5
+    
+    df_f_oldexpected = 2 + np.exp(k_exp*(mag-17)) -1
+    df_f_newexpected = 2 + np.exp(k_exp*(mag+delta_m.value-17)) -1
+    noise_scaling = df_f_newexpected / df_f_oldexpected
+    
+    flux_true = 10**((25-mag)/2.5)
+    df_f_true = np.maximum(0.02, (magerr * np.log(10) / 2.5))
+    flux_new = 10**((25-mag-delta_m.value)/2.5)
+    df_f_new = df_f_true * noise_scaling
+    
+    newfluxnoise = flux_new * (np.sqrt(df_f_new**2-df_f_true**2))
+    
+    flux_obs = flux_new + np.random.normal(scale=newfluxnoise)
+    flux_err = newfluxnoise
+    
+    new_lc = Table()
+    new_lc['mjd'] = this_lc['mjd']
+    new_lc['band'] = this_lc['band']
+    new_lc['flux'] = flux_obs
+    new_lc['fluxerr'] = flux_err
+    new_lc['zp'] = this_lc['zp']
+    new_lc['zpsys'] = this_lc['zpsys']
+    new_lc.meta = this_lc.meta
+    new_lc.meta['z'] = new_z
+    
+    return new_lc
