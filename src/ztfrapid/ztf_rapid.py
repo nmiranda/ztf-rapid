@@ -5,6 +5,7 @@ from copy import copy
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from astropy.cosmology import Planck15 as cosmo
 from astropy.table import Table
 from astrorapid.ANTARES_object.constants import GOOD_PHOTFLAG, TRIGGER_PHOTFLAG
@@ -14,6 +15,7 @@ from astrorapid.process_light_curves import InputLightCurve
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 from kerastuner import HyperModel
+from scipy.stats import binned_statistic
 from sklearn import metrics
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow import keras
@@ -280,7 +282,7 @@ def get_mag_err(lc):
     lc = lc[lc['flux'] > 0.0]
     return np.array(2.5 / np.log(10) * lc['fluxerr'] / lc['flux'])
 
-def ztf_noisify(lightcurve, new_z):
+def ztf_noisify(lightcurve, new_z, k_exp_scale=1.0):
     
     this_lc = copy(lightcurve)
     
@@ -301,7 +303,7 @@ def ztf_noisify(lightcurve, new_z):
     delta_m = cosmo.distmod(new_z)-cosmo.distmod(truez)
     
     k_exp = np.log(18+1) / (maglim-17)
-    k_exp *= 0.5
+    k_exp *= k_exp_scale
     
     df_f_oldexpected = 2 + np.exp(k_exp*(mag-17)) -1
     df_f_newexpected = 2 + np.exp(k_exp*(mag+delta_m.value-17)) -1
@@ -328,3 +330,71 @@ def ztf_noisify(lightcurve, new_z):
     new_lc.meta['z'] = new_z
     
     return new_lc
+
+def plot_joint_real_noisified(lc_data, k_exp_scale, num_subset=100000):
+
+    all_mag = np.concatenate([get_mag(lc) for lc in lc_data.values()])
+    all_mag_err = np.concatenate([get_mag_err(lc) for lc in lc_data.values()])
+    real_data = pd.DataFrame({'mag': all_mag, 'magErr': all_mag_err, 'type': 'Real'})
+
+    all_sim_lc = [ztf_noisify(lc, lc.meta['z'] * 2.0, k_exp_scale) for lc in lc_data.values() if lc.meta['z'] is not None]
+    sim_mag = np.concatenate([get_mag(lc) for lc in all_sim_lc if len(lc) > 0])
+    sim_mag_err = np.concatenate([get_mag_err(lc) for lc in all_sim_lc if len(lc) > 0])
+    sim_data = pd.DataFrame({'mag': sim_mag, 'magErr': sim_mag_err, 'type': 'Simulated'})
+
+    sim_data_subset = sim_data[(sim_data['magErr'] > 0.0) & (sim_data['magErr'] < 0.5)]
+    real_data_subset = real_data[(real_data['magErr'] > 0.0) & (real_data['magErr'] < 0.5)]
+    sel_num = int(num_subset / 2)
+    all_data_subset = pd.concat([real_data_subset[:sel_num], sim_data_subset[:sel_num]])
+
+    range_min = all_data_subset['mag'].min()
+    range_max = all_data_subset['mag'].max()
+
+    real_bin_means, real_bin_edges, real_binnumber = binned_statistic(
+        real_data_subset['mag'], 
+        real_data_subset['magErr'],
+        statistic='mean',
+        range=(range_min, range_max),
+    )
+    real_bin_stds, _, _ = binned_statistic(
+        real_data_subset['mag'], 
+        real_data_subset['magErr'],
+        statistic='std',
+        range=(range_min, range_max),
+    )
+    real_bin_width = (real_bin_edges[1] - real_bin_edges[0])
+    real_bin_centers = real_bin_edges[1:] - real_bin_width/2
+
+    sim_bin_means, sim_bin_edges, sim_binnumber = binned_statistic(
+        sim_data_subset['mag'], 
+        sim_data_subset['magErr'],
+        statistic='mean',
+        range=(range_min, range_max),
+    )
+    sim_bin_stds, _, _ = binned_statistic(
+        sim_data_subset['mag'], 
+        sim_data_subset['magErr'],
+        statistic='std',
+        range=(range_min, range_max),
+    )
+    sim_bin_width = (sim_bin_edges[1] - sim_bin_edges[0])
+    sim_bin_centers = sim_bin_edges[1:] - sim_bin_width/2
+    sim_bin_centers = sim_bin_centers + 0.08
+
+    g = sns.jointplot(
+        data=all_data_subset, 
+        x='mag', 
+        y='magErr', 
+        hue='type', 
+        kind='kde',
+    #     kind='scatter',
+        fill=True,
+    #     ylim=(-0.05, 0.5),
+    #     xlim=(16, 24),
+        alpha=0.6,
+        legend='False',
+    )
+
+    #
+    g.ax_joint.errorbar(real_bin_centers[:8], real_bin_means[:8], yerr=real_bin_stds[:8], capsize=3.0, fmt='o')
+    g.ax_joint.errorbar(sim_bin_centers[:8], sim_bin_means[:8], yerr=sim_bin_stds[:8], capsize=3.0, fmt='o')
