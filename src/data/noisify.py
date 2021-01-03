@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+import os
 
 import click
-import pandas as pd
 import numpy as np
+import pandas as pd
 from ztfrapid import ztf_rapid
+
 
 @click.command()
 @click.argument('input_filepath', type=click.Path(exists=True))
