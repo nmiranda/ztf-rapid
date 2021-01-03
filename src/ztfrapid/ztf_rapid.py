@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*- 
 import os
+import random
+import string
 from copy import copy
+from functools import partial
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -107,22 +110,31 @@ def to_astrorapid(this_lc):
         }
     )
 
-def make_datasets(filepath, savedir):
+def make_datasets(lc_data, savedir, split_data=True, class_nums=None):
     """
     docstring
     """
-    
-    lc_data = pd.read_pickle(filepath)
+    if not class_nums:
+        class_nums = tuple(CLASS_MAP.keys())
 
     def get_data(class_num, data_dir, save_dir, passbands, known_redshift, nprocesses, redo, calculate_t0):
 
         lightcurves = {str(class_num) + '_' + str(key): to_astrorapid(val) for key, val in lc_data.items() if to_classnumber(val) == class_num}
-        valid_lightcurves = {key: val.preprocess_light_curve() for key, val in lightcurves.items() if val is not None}
+
+        valid_lightcurves = dict()
+        for key, val in lightcurves.items():
+            if val is not None:
+                try:
+                    this_preproc_lc = val.preprocess_light_curve()
+                except ValueError as e:
+                    print(e)
+                    continue
+                valid_lightcurves[key] = this_preproc_lc
         
         return valid_lightcurves
 
     preparearrays = PrepareTrainingSetArrays(
-        reread_data=False,
+        reread_data=True,
         class_name_map=CLASS_MAP,
         training_set_dir=os.path.join(savedir, 'training'),
         data_dir=os.path.join(savedir, 'data'),
@@ -136,10 +148,26 @@ def make_datasets(filepath, savedir):
         passbands=('g', 'r', 'i'),
     )
 
+    if not split_data:
+        X, y, labels, class_names, class_weights, sample_weights, timesX, orig_lc, \
+            objids = preparearrays.prepare_training_set_arrays(class_nums=class_nums, split_data=False)
+
+        return {
+            'X': X,
+            'y': y,
+            'labels': labels,
+            'class_names': class_names,
+            'class_weights': class_weights,
+            'sample_weights': sample_weights,
+            'timesX': timesX,
+            'orig_lc': orig_lc,
+            'objids': objids,
+        }
+
     X_train, X_test, y_train, y_test, labels_train, \
     labels_test, class_names, class_weights, sample_weights, \
     timesX_train, timesX_test, orig_lc_train, orig_lc_test, \
-    objids_train, objids_test = preparearrays.prepare_training_set_arrays(class_nums=tuple(CLASS_MAP.keys()))
+    objids_train, objids_test = preparearrays.prepare_training_set_arrays(class_nums=class_nums)
 
     return {
         'X_train': X_train,
@@ -150,6 +178,9 @@ def make_datasets(filepath, savedir):
         'objids_test': objids_test,
         'timesX_test': timesX_test,
         'class_names': class_names,
+        'objids_train': objids_train,
+        'orig_lc_train': orig_lc_train,
+        'labels_train': labels_train,
     }
 
 def augment_datasets(input_dirpath, random_state, strategy='oversample'):
@@ -282,8 +313,8 @@ def get_mag_err(lc):
     lc = lc[lc['flux'] > 0.0]
     return np.array(2.5 / np.log(10) * lc['fluxerr'] / lc['flux'])
 
-def ztf_noisify(lightcurve, new_z, k_exp_scale=1.0):
-    
+def ztf_noisify(lightcurve, new_z=None, k_exp_scale=1.0, alpha=None):
+
     this_lc = copy(lightcurve)
     
     this_lc = this_lc[this_lc['flux'] > 0.0]
@@ -299,6 +330,9 @@ def ztf_noisify(lightcurve, new_z, k_exp_scale=1.0):
     magerr = 2.5 / np.log(10) * this_lc['fluxerr'] / this_lc['flux']
     maglim = this_lc['maglim']
     truez = this_lc.meta['z']
+
+    if alpha:
+        new_z = truez * alpha
 
     delta_m = cosmo.distmod(new_z)-cosmo.distmod(truez)
     
@@ -395,6 +429,37 @@ def plot_joint_real_noisified(lc_data, k_exp_scale, num_subset=100000):
         legend='False',
     )
 
-    #
     g.ax_joint.errorbar(real_bin_centers[:8], real_bin_means[:8], yerr=real_bin_stds[:8], capsize=3.0, fmt='o')
     g.ax_joint.errorbar(sim_bin_centers[:8], sim_bin_means[:8], yerr=sim_bin_stds[:8], capsize=3.0, fmt='o')
+
+def random_string(length=10):
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
+def noisify_id(objid, lc_data):
+
+    objid = objid.split('_')[1]
+    this_lc = lc_data[objid]
+    try:
+        noisified_lc = ztf_noisify(this_lc, alpha=2.0)
+    except TypeError as e:
+        return None
+    noisified_lc.meta['ztfname'] = objid + '_' + random_string()
+    
+    return noisified_lc
+
+def noisify_dataset(objids_train, labels_train, lc_data_orig, elem_per_class=50):
+
+    objid_class = pd.DataFrame({'ztfid': objids_train, 'class_': labels_train})
+
+    value_counts = objid_class['class_'].value_counts()
+
+    augmented_list = list()
+    for class_ in value_counts.index:
+    # for class_ in ['AGN', 'SN II', 'SN Ia']:
+
+        class_ids = objid_class.loc[objid_class['class_'] == class_,'ztfid']
+        to_augment_ids = np.random.choice(class_ids, size=elem_per_class, replace=True)
+
+        augmented_list += list(map(partial(noisify_id, lc_data=lc_data_orig), to_augment_ids))
+    
+    return {lc.meta['ztfname']: lc for lc in augmented_list if lc}

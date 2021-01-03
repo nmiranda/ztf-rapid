@@ -14,6 +14,7 @@ setup(
             'augment-dataset=data.augment_dataset:main',
             'train-model=models.train_model:main',
             'tune-model=models.tune_model:main',
+            'noisify=data.noisify:main',
             ],
     }
 )
