@@ -19,6 +19,7 @@ def main(input_filepath, dataset_filepath, output_filepath, epc):
     
     datasets_aug = ztf_rapid.make_datasets(lc_data, '/tmp/', split_data=False)
 
+    os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
     np.savez(
         output_filepath,
         X_train=datasets_aug['X'],
