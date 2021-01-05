@@ -40,6 +40,8 @@ BANDS = {'p48g': "g", 'p48r': "r", 'p48i': "i"}
 BANDS_VEC = np.vectorize(lambda x: BANDS[x])
 COLPB_ZTF = {'p48g': 'tab:green', 'p48r': 'tab:red', 'p48i': 'tab:blue'}
 COLPB = {'g': 'tab:green', 'r': 'tab:red', 'i': 'tab:blue'}
+COLORS = ['grey', 'tab:green', 'tab:orange', 'tab:blue', 'tab:red', 'tab:purple', 'tab:brown', '#aaffc3', 'tab:olive',
+          'tab:cyan', '#FF1493', 'navy', 'tab:pink', 'lightcoral', '#228B22', '#aa6e28', '#FFA07A']
 
 class HyperRAPID(HyperModel):
 
@@ -228,7 +230,7 @@ def scale_3d(array):
     array_normalized = scaler.fit_transform(array.reshape((orig_shape[0],-1))).reshape(orig_shape)
     return array_normalized
 
-def train(X_train, X_test, y_train, y_test, output_dirpath):
+def train(X_train, X_test, y_train, y_test, output_dirpath, epochs=25):
 
     try:
         os.mkdir(output_dirpath)
@@ -240,8 +242,7 @@ def train(X_train, X_test, y_train, y_test, output_dirpath):
         y_train,
         y_test,
         fig_dir=output_dirpath,
-        # epochs=25,
-        epochs=2,
+        epochs=epochs,
         retrain=True,
         # retrain=False,
         # workers=1,
@@ -293,16 +294,19 @@ def true_pred_ensemble(y_test, y_pred_list, objids_test, class_names, cutoff=0.7
 
     return test_cut, pred_cut
 
-def plot_confusion_matrix(y_true, y_pred, class_names):
+def plot_confusion_matrix(y_true, y_pred, class_names, normalize='true'):
 
     cm = metrics.confusion_matrix(
         y_true, 
         y_pred,
-        normalize='true'
+        normalize=normalize
     )
     cmd = metrics.ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+
+    fig, ax = plt.subplots(dpi=160)
     return cmd.plot(
-        cmap=plt.cm.Blues, 
+        cmap=plt.cm.Blues,
+        ax=ax,
     )
 
 def get_mag(lc):
@@ -463,3 +467,18 @@ def noisify_dataset(objids_train, labels_train, lc_data_orig, elem_per_class=50)
         augmented_list += list(map(partial(noisify_id, lc_data=lc_data_orig), to_augment_ids))
     
     return {lc.meta['ztfname']: lc for lc in augmented_list if lc}
+
+def get_pred_label_peak(X_test, y_pred):
+
+    argmax_time = X_test.max(axis=-1).argmax(axis=-1)
+    pred_label = y_pred[np.arange(y_pred.shape[0]),argmax_time].argmax(axis=-1)
+
+    return pred_label
+
+def get_pred_label(y_pred, time_index=-1):
+
+    return y_pred[:,time_index,:].argmax(axis=-1)
+
+def get_y_true(y_test):
+    
+    return y_test[:,0,:].argmax(axis=-1)

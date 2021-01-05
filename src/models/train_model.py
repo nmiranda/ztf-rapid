@@ -10,7 +10,8 @@ from ztfrapid.ztf_rapid import train
 @click.argument('input_filepath', type=click.Path(exists=True))
 @click.argument('output_filepath', type=click.Path())
 @click.argument('output_dirpath', type=click.Path())
-def main(input_filepath, output_filepath, output_dirpath):
+@click.option('--epochs', type=int, default=25)
+def main(input_filepath, output_filepath, output_dirpath, epochs):
 
     os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
     
@@ -20,7 +21,7 @@ def main(input_filepath, output_filepath, output_dirpath):
     y_train = files['y_train']
     y_test = files['y_test']
 
-    model = train(X_train, X_test, y_train, y_test, output_dirpath)
+    model = train(X_train, X_test, y_train, y_test, output_dirpath, epochs)
 
     model.save(output_filepath)
 
