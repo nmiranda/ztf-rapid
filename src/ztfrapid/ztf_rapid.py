@@ -185,30 +185,47 @@ def make_datasets(lc_data, savedir, split_data=True, class_nums=None):
         'labels_train': labels_train,
     }
 
-def augment_datasets(input_dirpath, random_state, strategy='oversample'):
+# def augment_datasets(input_dirpath, random_state, strategy='oversample'):
 
-    preparearrays = PrepareTrainingSetArrays(
-        reread_data=False,
-        class_name_map=CLASS_MAP, 
-        training_set_dir=os.path.join(input_dirpath, 'training'),
-        data_dir=os.path.join(input_dirpath, 'data'),
-        save_dir=os.path.join(input_dirpath, 'save'),
-        # get_data_func=get_data,
-        get_data_func=None,
-        contextual_info=(),
-        nobs=150,
-        mintime=0,
-        maxtime=150,
-        timestep=1.0,
-        passbands=('g', 'r', 'i'),
-    )
+    # preparearrays = PrepareTrainingSetArrays(
+    #     reread_data=False,
+    #     class_name_map=CLASS_MAP, 
+    #     training_set_dir=os.path.join(input_dirpath, 'training'),
+    #     data_dir=os.path.join(input_dirpath, 'data'),
+    #     save_dir=os.path.join(input_dirpath, 'save'),
+    #     # get_data_func=get_data,
+    #     get_data_func=None,
+    #     contextual_info=(),
+    #     nobs=150,
+    #     mintime=0,
+    #     maxtime=150,
+    #     timestep=1.0,
+    #     passbands=('g', 'r', 'i'),
+    # )
 
-    X_train, X_test, y_train, y_test, labels_train, \
-    labels_test, class_names, class_weights, sample_weights, \
-    timesX_train, timesX_test, orig_lc_train, orig_lc_test, \
-    objids_train, objids_test = preparearrays.prepare_training_set_arrays(class_nums=tuple(CLASS_MAP.keys()))
+    # X_train, X_test, y_train, y_test, labels_train, \
+    # labels_test, class_names, class_weights, sample_weights, \
+    # timesX_train, timesX_test, orig_lc_train, orig_lc_test, \
+    # objids_train, objids_test = preparearrays.prepare_training_set_arrays(class_nums=tuple(CLASS_MAP.keys()))
 
-    X_train_2d = X_train.transpose(0,2,1).reshape(-1,X_train.shape[2]*X_train.shape[1])
+    # X_train_2d = X_train.transpose(0,2,1).reshape(-1,X_train.shape[2]*X_train.shape[1])
+
+    # if strategy == 'oversample':
+    #     ros = RandomOverSampler(random_state=random_state)
+    # elif strategy == 'undersample':
+    #     ros = RandomUnderSampler(random_state=random_state)
+    # else:
+    #     raise ValueError('Strategy non valid.')
+    # X_res, y_res = ros.fit_resample(X_train_2d, labels_train)
+
+    # y_train_res = y_train[ros.sample_indices_]
+    # X_train_res = X_train[ros.sample_indices_]
+
+    # return X_train_res, X_test, y_train_res, y_test, objids_test, class_names
+
+def augment_datasets(X, y, labels, random_state, strategy='oversample'):
+
+    X_2d = X.transpose(0,2,1).reshape(-1,X.shape[2]*X.shape[1])
 
     if strategy == 'oversample':
         ros = RandomOverSampler(random_state=random_state)
@@ -216,12 +233,12 @@ def augment_datasets(input_dirpath, random_state, strategy='oversample'):
         ros = RandomUnderSampler(random_state=random_state)
     else:
         raise ValueError('Strategy non valid.')
-    X_res, y_res = ros.fit_resample(X_train_2d, labels_train)
+    ros.fit_resample(X_2d, labels)
 
-    y_train_res = y_train[ros.sample_indices_]
-    X_train_res = X_train[ros.sample_indices_]
+    y_res = y[ros.sample_indices_]
+    X_res = X[ros.sample_indices_]
 
-    return X_train_res, X_test, y_train_res, y_test, objids_test, class_names
+    return X_res, y_res
 
 def scale_3d(array):
 
