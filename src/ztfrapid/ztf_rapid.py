@@ -499,3 +499,46 @@ def get_pred_label(y_pred, time_index=-1):
 def get_y_true(y_test):
     
     return y_test[:,0,:].argmax(axis=-1)
+
+def plot_lightcurve_scores(lightcurve, timesX, X, y, objid, true_label, class_names):
+
+    fig, (ax1, ax2) = plt.subplots(nrows=2, 
+                                ncols=1, 
+                                figsize=(6.0, 4.8),
+                                dpi=200,
+                                sharex=True)
+
+    argmax = timesX.argmax() + 1
+    for pbidx, pb in enumerate(BANDS.values()):
+        if pb not in set(lightcurve['passband']):
+            continue
+        pbmask = lightcurve['passband'] == pb
+        ax1.errorbar(lightcurve[pbmask]['time'], 
+                    lightcurve[pbmask]['flux'], 
+                    yerr=lightcurve[pbmask]['fluxErr'], 
+                    fmt='o', 
+                    label=pb, 
+                    lw=2, 
+                    markersize=5, 
+                    alpha=0.8, 
+                    c=COLPB[pb],
+                    capsize=2.0,
+                    )
+        ax1.plot(timesX[:argmax], X[:, pbidx][:argmax], lw=3, c=COLPB[pb])
+
+    for classnum, classname in enumerate(class_names):
+        classnum = classnum+1
+        ax2.plot(timesX[:argmax], y[:, classnum][:argmax], '-', label=classname,
+                color=COLORS[classnum], linewidth=3)
+
+    ax1.set_ylim(bottom=0.0)
+    ax1.set_ylabel('Flux', fontsize='large')
+    ax1.legend(loc='best', fontsize='medium')
+
+    ax2.set_ylim((0.0, 1.0))
+    ax2.set_ylabel('Class probability', fontsize='large')
+    ax2.set_xlabel('Time from first detection (days)', fontsize='large')
+    ax2.legend(loc='best', fontsize='medium')
+
+    fig.suptitle("ID: %s, True class: %s" % (objid.split('_')[1], true_label),
+                fontsize='medium')
