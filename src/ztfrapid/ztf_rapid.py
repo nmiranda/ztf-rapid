@@ -185,44 +185,6 @@ def make_datasets(lc_data, savedir, split_data=True, class_nums=None):
         'labels_train': labels_train,
     }
 
-# def augment_datasets(input_dirpath, random_state, strategy='oversample'):
-
-    # preparearrays = PrepareTrainingSetArrays(
-    #     reread_data=False,
-    #     class_name_map=CLASS_MAP, 
-    #     training_set_dir=os.path.join(input_dirpath, 'training'),
-    #     data_dir=os.path.join(input_dirpath, 'data'),
-    #     save_dir=os.path.join(input_dirpath, 'save'),
-    #     # get_data_func=get_data,
-    #     get_data_func=None,
-    #     contextual_info=(),
-    #     nobs=150,
-    #     mintime=0,
-    #     maxtime=150,
-    #     timestep=1.0,
-    #     passbands=('g', 'r', 'i'),
-    # )
-
-    # X_train, X_test, y_train, y_test, labels_train, \
-    # labels_test, class_names, class_weights, sample_weights, \
-    # timesX_train, timesX_test, orig_lc_train, orig_lc_test, \
-    # objids_train, objids_test = preparearrays.prepare_training_set_arrays(class_nums=tuple(CLASS_MAP.keys()))
-
-    # X_train_2d = X_train.transpose(0,2,1).reshape(-1,X_train.shape[2]*X_train.shape[1])
-
-    # if strategy == 'oversample':
-    #     ros = RandomOverSampler(random_state=random_state)
-    # elif strategy == 'undersample':
-    #     ros = RandomUnderSampler(random_state=random_state)
-    # else:
-    #     raise ValueError('Strategy non valid.')
-    # X_res, y_res = ros.fit_resample(X_train_2d, labels_train)
-
-    # y_train_res = y_train[ros.sample_indices_]
-    # X_train_res = X_train[ros.sample_indices_]
-
-    # return X_train_res, X_test, y_train_res, y_test, objids_test, class_names
-
 def augment_datasets(X, y, labels, random_state, strategy='oversample'):
 
     X_2d = X.transpose(0,2,1).reshape(-1,X.shape[2]*X.shape[1])
@@ -270,7 +232,6 @@ def train(X_train, X_test, y_train, y_test, output_dirpath, epochs=25):
 
 def predict(model, X_test):
 
-    #return model.predict(X_test)
     return model(X_test, training=False).numpy()
 
 def count_results_for_class(results, class_):
@@ -542,3 +503,66 @@ def plot_lightcurve_scores(lightcurve, timesX, X, y, objid, true_label, class_na
 
     fig.suptitle("ID: %s, True class: %s" % (objid.split('_')[1], true_label),
                 fontsize='medium')
+
+def plot_processed_lightcurve(lightcurve, timesX=None, X=None):
+
+    fig = plt.figure(figsize=(3.2, 2.4), dpi=200)
+
+    for pbidx, pb in enumerate(BANDS.values()):
+        if pb not in set(lightcurve['passband']):
+            continue
+        pbmask = lightcurve['passband'] == pb
+        plt.errorbar(
+            lightcurve[pbmask]['time'],
+            lightcurve[pbmask]['flux'],
+            yerr=lightcurve[pbmask]['fluxErr'],
+            fmt='o',
+            label=pb,
+            lw=2,
+            markersize=5,
+            alpha=0.8,
+            capsize=2.0,
+            c=COLPB[pb]
+        )
+
+        if (timesX is not None) and (X is not None):
+            argmax = timesX.argmax() + 1
+            plt.plot(timesX[:argmax], X[:,pbidx][:argmax], c=COLPB[pb])
+
+    plt.ylim(bottom=0.0)
+    plt.ylabel('Flux')
+    plt.xlabel('Time from first detection (days)')
+    plt.legend(loc='upper right', title='Bands')
+    fig.tight_layout()
+
+    return fig
+
+
+def plot_raw_lightcurve(lightcurve):
+
+    fig = plt.figure(figsize=(3.2, 2.4), dpi=200)
+
+    for pbidx, pb in enumerate(BANDS.keys()):
+        if pb not in set(lightcurve['band']):
+            continue
+        pbmask = lightcurve['band'] == pb
+        plt.errorbar(
+            lightcurve[pbmask]['mjd'],
+            lightcurve[pbmask]['flux'],
+            yerr=lightcurve[pbmask]['fluxerr'],
+            fmt='o',
+            label = pb,
+            lw=2,
+            markersize=5,
+            alpha=0.8,
+            capsize=2.0,
+            c=COLPB_ZTF[pb]
+        )
+
+    plt.ylim(bottom=0.0)
+    plt.ylabel('Flux')
+    plt.xlabel('Time (MJD)')
+    plt.legend(loc='upper right', title='Bands')
+    fig.tight_layout()
+
+    return fig
