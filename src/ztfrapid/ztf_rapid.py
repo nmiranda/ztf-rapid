@@ -59,6 +59,12 @@ class HyperRAPID(HyperModel):
 
         return model
 
+def target_to_categorical(target):
+    return np.argmax(target[:,0,:], axis=1)
+
+def pred_to_categorical(pred):
+    return np.argmax(pred[:,-1,:], axis=1)
+
 def filter_pps(lightcurve):
     
     mask = np.logical_or.reduce((lightcurve['band'] == 'p48r', lightcurve['band'] == 'p48g', lightcurve['band'] == 'p48i'))
@@ -567,3 +573,7 @@ def plot_raw_lightcurve(lightcurve):
     fig.tight_layout()
 
     return fig
+
+def select_bright_sources(X, y, flux):
+    mask = np.any(X.reshape(X.shape[0], -1) > flux, axis=-1)
+    return X[mask], y[mask]
