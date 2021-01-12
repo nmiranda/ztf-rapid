@@ -254,10 +254,11 @@ def runs_result_dataframe(y_test, y_pred_list, objids_test):
 def result_class_distribution(results, class_names):
     
     res_dist = pd.DataFrame({
-            class_: count_results_for_class(results, idx+1) / len(class_names) \
+            class_: count_results_for_class(results, idx+1) \
                 for idx, class_ in enumerate(class_names)
             }, 
         index=results.index)
+    res_dist = res_dist.div(res_dist.sum(axis=1), axis=0)
     
     return res_dist
     
