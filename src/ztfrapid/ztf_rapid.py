@@ -2,6 +2,7 @@
 import os
 import random
 import string
+from collections import defaultdict
 from copy import copy
 from functools import partial
 
@@ -36,12 +37,41 @@ CLASS_MAP_REV = {
     'AGN': 3,
     'CV': 4
 }
+PLASTICC_CLASSMAP = {
+    90: "SN Ia",
+    42: "SN II",
+    88: "AGN",
+    64: "KN",
+}
+PLASTICC_CLASSMAP_NUM = {
+    "SN Ia": 1,
+    "SN II": 2,
+    "AGN": 3,
+    "KN": 4,
+}
+PLASTICC_CLASSMAP_NUM_REV = {
+    1: "SN Ia",
+    2: "SN II",
+    3: "AGN",
+    4: "KN",
+}
+BANDMAP = {
+    0: 'u',
+    1: 'g',
+    2: 'r',
+    3: 'i',
+    4: 'z',
+    5: 'y',
+}
 BANDS = {'p48g': "g", 'p48r': "r", 'p48i': "i"}
 BANDS_VEC = np.vectorize(lambda x: BANDS[x])
 COLPB_ZTF = {'p48g': 'tab:green', 'p48r': 'tab:red', 'p48i': 'tab:blue'}
 COLPB = {'g': 'tab:green', 'r': 'tab:red', 'i': 'tab:blue'}
 COLORS = ['grey', 'tab:green', 'tab:orange', 'tab:blue', 'tab:red', 'tab:purple', 'tab:brown', '#aaffc3', 'tab:olive',
           'tab:cyan', '#FF1493', 'navy', 'tab:pink', 'lightcoral', '#228B22', '#aa6e28', '#FFA07A']
+PLASTICC_BANDS_VEC = np.vectorize(lambda x: BANDMAP[x])
+PLASTICC_CLASSMAP_DICT = defaultdict(lambda: None)
+PLASTICC_CLASSMAP_DICT.update(PLASTICC_CLASSMAP)
 
 class HyperRAPID(HyperModel):
 
@@ -577,3 +607,114 @@ def plot_raw_lightcurve(lightcurve):
 def select_bright_sources(X, y, flux):
     mask = np.any(X.reshape(X.shape[0], -1) > flux, axis=-1)
     return X[mask], y[mask]
+
+def plasticc_to_astrorapid(this_lc):
+
+    mask = np.logical_or.reduce((this_lc['passband'] == 1, this_lc['passband'] == 2, this_lc['passband'] == 3))
+    this_lc = this_lc[mask]
+    mask = this_lc['flux'] > 0.0
+    this_lc = this_lc[mask]
+
+    if len(this_lc) <= 2:
+        return None
+
+    this_lc['band'] = PLASTICC_BANDS_VEC(this_lc['passband'])
+
+    this_lc['photflag'] = [TRIGGER_PHOTFLAG] + (len(this_lc)-1) * [GOOD_PHOTFLAG]
+
+    return InputLightCurve(
+        mjd=this_lc['mjd'],
+        flux=this_lc['flux'],
+        fluxerr=this_lc['flux_err'],
+        passband=this_lc['band'],
+        photflag=this_lc['photflag'],
+        ra=this_lc['ra'].iloc[0], 
+        dec=this_lc['decl'].iloc[0],
+        objid=this_lc['object_id'].iloc[0],
+        redshift=None,
+        mwebv=this_lc['mwebv'].iloc[0],
+        known_redshift=False,
+        training_set_parameters={
+            'class_number': PLASTICC_CLASSMAP_NUM[this_lc['label'].iloc[0]],
+            'peakmjd': this_lc.iloc[np.argmax(this_lc['flux'])]['mjd']
+        }
+    )
+
+    return this_lc
+
+def plasticc_to_classnumber(this_lc):
+
+    return PLASTICC_CLASSMAP_NUM[this_lc['label'][0]]
+
+def plasticc_make_datasets(lc_data, savedir, split_data=True, class_nums=None):
+
+    if not class_nums:
+        class_nums = tuple(CLASS_MAP.keys())
+
+    def plasticc_get_data(class_num, data_dir, save_dir, passbands, known_redshift, nprocesses, redo, calculate_t0):
+
+        lc_data[lc_data['label'] == PLASTICC_CLASSMAP_NUM_REV[plasticc_to_classnumber(lc_data)]]
+
+        lightcurves = {str(class_num) + '_' + str(objid): plasticc_to_astrorapid(lc) for objid, lc in lc_data.groupby('object_id')}
+
+        valid_lightcurves = dict()
+        for key, val in lightcurves.items():
+            if val is not None:
+                try:
+                    this_preproc_lc = val.preprocess_light_curve()
+                except ValueError as e:
+                    print(e)
+                    continue
+                valid_lightcurves[key] = this_preproc_lc
+        
+        return valid_lightcurves
+
+    preparearrays = PrepareTrainingSetArrays(
+        reread_data=True,
+        class_name_map=PLASTICC_CLASSMAP_NUM_REV,
+        training_set_dir=os.path.join(savedir, 'training'),
+        data_dir=os.path.join(savedir, 'data'),
+        save_dir=os.path.join(savedir, 'save'),
+        get_data_func=plasticc_get_data,
+        contextual_info=(),
+        nobs=150,
+        mintime=0,
+        maxtime=150,
+        timestep=1.0,
+        passbands=('g', 'r', 'i'),
+    )
+
+    if not split_data:
+        X, y, labels, class_names, class_weights, sample_weights, timesX, orig_lc, \
+            objids = preparearrays.prepare_training_set_arrays(class_nums=class_nums, split_data=False)
+
+        return {
+            'X': X,
+            'y': y,
+            'labels': labels,
+            'class_names': class_names,
+            'class_weights': class_weights,
+            'sample_weights': sample_weights,
+            'timesX': timesX,
+            'orig_lc': orig_lc,
+            'objids': objids,
+        }
+
+    X_train, X_test, y_train, y_test, labels_train, \
+    labels_test, class_names, class_weights, sample_weights, \
+    timesX_train, timesX_test, orig_lc_train, orig_lc_test, \
+    objids_train, objids_test = preparearrays.prepare_training_set_arrays(class_nums=class_nums)
+
+    return {
+        'X_train': X_train,
+        'X_test': X_test,
+        'y_train': y_train,
+        'y_test': y_test,
+        'orig_lc_test': orig_lc_test,
+        'objids_test': objids_test,
+        'timesX_test': timesX_test,
+        'class_names': class_names,
+        'objids_train': objids_train,
+        'orig_lc_train': orig_lc_train,
+        'labels_train': labels_train,
+    }
