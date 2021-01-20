@@ -3,7 +3,7 @@ import click
 import numpy as np
 import pandas as pd
 from ztfrapid import ztf_rapid
-
+import os
 
 @click.command()
 @click.argument('metadata_filepath', type=click.Path(exists=True))
@@ -21,6 +21,7 @@ def main(metadata_filepath, data_filepath, output_filepath):
     lc_data_metadata = pd.merge(lc_metadata, lc_data)
     dataset = ztf_rapid.plasticc_make_datasets(lc_data_metadata, savedir='/tmp')
 
+    os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
     np.savez(
         output_filepath,
         X_train=dataset['X_train'],
