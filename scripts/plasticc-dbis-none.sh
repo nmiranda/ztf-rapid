@@ -1,2 +1,3 @@
 make-dataset-plasticc /home/miranda/ztf-rapid/data/raw/plasticc_train_metadata.csv.gz /home/miranda/ztf-rapid/data/raw/plasticc_train_lightcurves.csv.gz /home/miranda/ztf-rapid/data/processed/test_plasticc_none/test_plasticc_none.npz
 
+train-model /home/miranda/ztf-rapid/data/processed/test_plasticc_none/test_plasticc_none.npz /home/miranda/ztf-rapid/models/test_plasticc_none/test_plasticc_none.hdf5 /home/miranda/ztf-rapid/reports/figures/test_plasticc_none

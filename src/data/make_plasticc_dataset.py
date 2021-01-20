@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import click
+import numpy as np
 import pandas as pd
 from ztfrapid import ztf_rapid
 
