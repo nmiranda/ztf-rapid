@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 @click.argument('output_filepath', type=click.Path())
 @click.option('--epc', default=50, type=int, help='Number of elements per class.')
 @click.option('--augtest', is_flag=True)
-def main(input_filepath, dataset_filepath, output_filepath, epc):
+def main(input_filepath, dataset_filepath, output_filepath, epc, augtest):
 
     lc_data_orig = pd.read_pickle(input_filepath)
     datasets = np.load(dataset_filepath, allow_pickle=True)
