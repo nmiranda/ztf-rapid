@@ -54,6 +54,7 @@ def main(input_filepath, output_dirpath, output_filepath, nocv):
         timesX_test=dataset['timesX_test'],
         class_names=dataset['class_names'],
         labels_train=dataset['labels_train'],
+        labels_test=dataset['labels_test'],
     )
 
 

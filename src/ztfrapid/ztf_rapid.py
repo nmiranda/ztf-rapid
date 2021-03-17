@@ -221,6 +221,7 @@ def make_datasets(lc_data, savedir, split_data=True, class_nums=None):
         'objids_train': objids_train,
         'orig_lc_train': orig_lc_train,
         'labels_train': labels_train,
+        'labels_test': labels_test,
     }
 
 def augment_datasets(X, y, labels, random_state, strategy='oversample'):
