@@ -11,11 +11,13 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from astropy.cosmology import Planck15 as cosmo
+from astropy.io import fits as pf
 from astropy.table import Table
 from astrorapid.ANTARES_object.constants import GOOD_PHOTFLAG, TRIGGER_PHOTFLAG
 from astrorapid.neural_network_model import train_model
 from astrorapid.prepare_training_set import PrepareTrainingSetArrays
 from astrorapid.process_light_curves import InputLightCurve
+from FATS.Feature import FeatureSpace
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 from kerastuner import HyperModel
@@ -605,6 +607,7 @@ def plot_raw_lightcurve(lightcurve):
     return fig
 
 def select_bright_sources(X, y, flux):
+
     mask = np.any(X.reshape(X.shape[0], -1) > flux, axis=-1)
     return X[mask], y[mask]
 
@@ -718,3 +721,60 @@ def plasticc_make_datasets(lc_data, savedir, split_data=True, class_nums=None):
         'orig_lc_train': orig_lc_train,
         'labels_train': labels_train,
     }
+
+def generate_fits_features_band(input_filepath, output_filepath, band):
+
+    lc_data = pd.read_pickle(input_filepath)
+
+    feature_list = ['CAR_sigma', 'CAR_mean', 'Meanvariance', 'Mean', 'PercentAmplitude', 'Skew', 'AndersonDarling', 'Std', 'MedianAbsDev', 'Q31', 'Amplitude', 'PeriodLS']
+
+    result_list = list()
+    id_list = list()
+    target_list = list()
+    for this_id in lc_data.keys():
+        this_lcs = lc_data[this_id]
+        if len(this_lcs) < 1:
+            continue
+        this_lc = this_lcs[this_lcs['band'] == band]
+        this_mag = get_mag(this_lc)
+        this_mjd = np.array(this_lc[this_lc['flux'] > 0.0]['mjd'])
+        this_mag_err = get_mag_err(this_lc)
+        if len(this_mag) < 1:
+            continue
+        fields = [this_mag, this_mjd, this_mag_err]
+        feature_space = FeatureSpace(featureList=feature_list)
+        feature_space = feature_space.calculateFeature(np.array(fields))
+        result_list.append(feature_space.result())
+        id_list.append(this_id)
+        target_list.append(this_lc.meta['classification'])
+
+    features = pd.DataFrame(result_list, columns=feature_list)
+    features['ztfid'] = id_list
+    features['target'] = target_list
+
+    table = features
+    coldefs = [
+        pf.Column(name='ztfid', format='12A', array=np.array(table['ztfid'])),
+        pf.Column(name='CAR_mean', format='F', array=table['CAR_mean']),
+        pf.Column(name='Meanvariance', format='F', array=table['Meanvariance']),
+        pf.Column(name='Mean', format='F', array=table['Mean']),
+        pf.Column(name='PercentAmplitude', format='F', array=table['PercentAmplitude']),
+        pf.Column(name='Skew', format='F', array=table['Skew']),
+        pf.Column(name='AndersonDarling', format='F', array=table['AndersonDarling']),
+        pf.Column(name='Std', format='F', array=table['Std']),
+        pf.Column(name='MedianAbsDev', format='F', array=table['MedianAbsDev']),
+        pf.Column(name='Q31', format='F', array=table['Q31']),
+        pf.Column(name='Amplitude', format='F', array=table['Amplitude']),
+        pf.Column(name='PeriodLS', format='F', array=table['PeriodLS']),
+        pf.Column(name='target', format='16A', array=table['target']),
+    ]
+
+    tbhdu = pf.BinTableHDU.from_columns(coldefs)
+    tbhdu.writeto(output_filepath, checksum=True, overwrite=True)
+
+def get_dataset_bands(lc_data):
+
+    band_set = set()
+    for ztf_id, lc in lc_data.items():
+        band_set |= set(lc['band'])
+    return band_set
