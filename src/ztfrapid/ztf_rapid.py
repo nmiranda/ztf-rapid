@@ -578,15 +578,16 @@ def plot_processed_lightcurve(lightcurve, timesX=None, X=None):
     return fig
 
 
-def plot_raw_lightcurve(lightcurve):
+def plot_raw_lightcurve(lightcurve, ax=None):
 
-    fig = plt.figure(figsize=(3.2, 2.4), dpi=200)
+    if ax is None:
+        ax = plt.gca()
 
     for pbidx, pb in enumerate(BANDS.keys()):
         if pb not in set(lightcurve['band']):
             continue
         pbmask = lightcurve['band'] == pb
-        plt.errorbar(
+        ax.errorbar(
             lightcurve[pbmask]['mjd'],
             lightcurve[pbmask]['flux'],
             yerr=lightcurve[pbmask]['fluxerr'],
@@ -599,13 +600,13 @@ def plot_raw_lightcurve(lightcurve):
             c=COLPB_ZTF[pb]
         )
 
-    plt.ylim(bottom=0.0)
-    plt.ylabel('Flux')
-    plt.xlabel('Time (MJD)')
-    plt.legend(loc='upper right', title='Bands')
-    fig.tight_layout()
+    ax.set_ylim(bottom=0.0)
+    ax.set_ylabel('Flux')
+    ax.set_xlabel('Time (MJD)')
+    ax.legend(loc='upper right', title='Bands')
+    ax.set_title("ZTFID: {}, Type: {}".format(lightcurve.meta['ztfname'], lightcurve.meta['classification']))
 
-    return fig
+    return ax
 
 def select_bright_sources(X, y, flux):
 
