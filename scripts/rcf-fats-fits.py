@@ -13,7 +13,7 @@ for band in bands:
     results_list = list()
     for ztfid, lc in lc_data.items():
         lc = lc[lc['band'] == band]
-        if len(lc) < 2:
+        if len(lc) <= 2:
             continue
         this_fluxes = lc['flux']
         this_times = lc['mjd']
