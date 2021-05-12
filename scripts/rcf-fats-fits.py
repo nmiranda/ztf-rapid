@@ -20,7 +20,7 @@ for band in bands:
     target_list = list()
     results_list = list()
 
-    for ztfid, lc in tqdm(lc_data.items()):
+    for ztfid, lc in lc_data.items():
         lc = lc[lc['band'] == band]
         if len(lc) < 2:
             continue
