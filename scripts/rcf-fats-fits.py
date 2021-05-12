@@ -18,7 +18,7 @@ for band in bands:
         this_fluxes = lc['flux']
         this_times = lc['mjd']
         this_errors = lc['fluxerr']
-        feature_space = FeatureSpace(Data=['magnitude', 'time', 'error'], featureList=None, excludeList=['interp1d', 'FluxPercentileRatioMid20'])
+        feature_space = FeatureSpace(Data=['magnitude', 'time', 'error'], featureList=None, excludeList=['interp1d', 'FluxPercentileRatioMid20', 'FluxPercentileRatioMid35', 'FluxPercentileRatioMid50', 'FluxPercentileRatioMid65', 'FluxPercentileRatioMid80'])
         feature_space = feature_space.calculateFeature(np.array([this_fluxes, this_times, this_errors]))
         this_result = feature_space.result()
         # results_list.append(feature_space.result())
