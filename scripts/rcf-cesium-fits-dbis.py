@@ -22,12 +22,12 @@ for band in bands:
         values_list.append(lc['flux'])
         target_list.append(lc.meta['classification'])
 
-    features = featurize_time_series(times=times_list[:10], values=values_list[:10], features_to_use=GENERAL_FEATS + CADENCE_FEATS + LOMB_SCARGLE_FEATS)
+    features = featurize_time_series(times=times_list, values=values_list, features_to_use=GENERAL_FEATS + CADENCE_FEATS + LOMB_SCARGLE_FEATS)
 
     features.columns = features.columns.droplevel(1)
-    features['ztfid'] = ztfid_list[:10]
+    features['ztfid'] = ztfid_list
     features = features.set_index('ztfid')
-    features['target'] = target_list[:10]
+    features['target'] = target_list
 
     feats_table = Table.from_pandas(features)
 
