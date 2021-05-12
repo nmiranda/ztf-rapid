@@ -24,7 +24,7 @@ for band in bands:
         errors_list.append(lc['flux'])
         target_list.append(lc.meta['classification'])
 
-    features = featurize_time_series(times=times_list, values=values_list, errors=errors_list, features_to_use=GENERAL_FEATS + CADENCE_FEATS + LOMB_SCARGLE_FEATS)
+    features = featurize_time_series(times=times_list, values=values_list, errors=errors_list, features_to_use=GENERAL_FEATS + CADENCE_FEATS + LOMB_SCARGLE_FEATS, scheduler='single-threaded')
 
     features.columns = features.columns.droplevel(1)
     features['ztfid'] = ztfid_list
