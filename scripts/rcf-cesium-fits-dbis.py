@@ -14,7 +14,11 @@ for band in bands:
     values_list = list()
     errors_list = list()
     target_list = list()
+    i = 0
     for ztfid, lc in lc_data.items():
+        if i == 5:
+            break
+        i += 1
         lc = lc[lc['band'] == band]
         if len(lc) < 2:
             continue
@@ -30,11 +34,9 @@ for band in bands:
     features.columns = features.columns.droplevel(1)
     features['ztfid'] = ztfid_list
     features = features.set_index('ztfid')
-    features['target'] = target_list
+    features['target'] = np.array(target_list, dtype='U')
 
     feats_table = Table.from_pandas(features)
-
-    import pdb;pdb.set_trace()
 
     out_path = f'/home/miranda/ztf-rapid/data/interim/rcf_cesium_features_{band}.fits'
     print(out_path)
