@@ -15,7 +15,7 @@ for band in bands:
     target_list = list()
     for ztfid, lc in lc_data.items():
         lc = lc[lc['band'] == band]
-        if len(lc) == 0:
+        if len(lc) < 2:
             continue
         ztfid_list.append(ztfid)
         times_list.append(lc['mjd'])
