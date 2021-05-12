@@ -11,7 +11,7 @@ def get_features(feature_space, fluxes, times, errors):
 
 def main():
 
-    client = Client(threads_per_worker=4, n_workers=4)
+    client = Client(threads_per_worker=4, n_workers=12)
 
     bands = ('p48g', 'p48r', 'p48i')
     # exclude_list = ['interp1d', 'FluxPercentileRatioMid20', 'FluxPercentileRatioMid35', 'FluxPercentileRatioMid50', 'FluxPercentileRatioMid65', 'FluxPercentileRatioMid80', 'PercentDifferenceFluxPercentile']
