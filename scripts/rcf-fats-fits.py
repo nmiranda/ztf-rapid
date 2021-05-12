@@ -2,7 +2,11 @@ import pandas as pd
 import numpy as np
 from FATS.Feature import FeatureSpace
 from astropy.table import Table
-from tqdm import tqdm
+import dask
+
+def get_features(feature_space, fluxes, times, errors):
+    this_fs = feature_space.calculateFeature(np.array([fluxes, times, errors]))
+    return this_fs.result(method='dict')
 
 bands = ('p48g', 'p48r', 'p48i')
 # exclude_list = ['interp1d', 'FluxPercentileRatioMid20', 'FluxPercentileRatioMid35', 'FluxPercentileRatioMid50', 'FluxPercentileRatioMid65', 'FluxPercentileRatioMid80', 'PercentDifferenceFluxPercentile']
@@ -20,18 +24,22 @@ for band in bands:
         lc = lc[lc['band'] == band]
         if len(lc) < 2:
             continue
+        ztfid_list.append(ztfid)
+        target_list.append(lc.meta['classification'])
         this_fluxes = lc['flux']
         this_times = lc['mjd']
         this_errors = lc['fluxerr']
         feature_space = FeatureSpace(Data=['magnitude', 'time', 'error'], featureList=None, excludeList=exclude_list)
-        feature_space = feature_space.calculateFeature(np.array([this_fluxes, this_times, this_errors]))
-        this_result = feature_space.result(method='dict')
+        # feature_space = feature_space.calculateFeature(np.array([this_fluxes, this_times, this_errors]))
+        # this_result = feature_space.result(method='dict')
+        this_result = dask.delayed(get_features)(this_fluxes, this_times, this_errors)
         results_list.append(this_result)
+
+    results_list = dask.compute(results_list)
 
     features = pd.DataFrame(results_list)
     features['ztfid'] = ztfid_list
-    features = features.set_index('ztfid')
-    features['target'] = target_list
+    features['target'] = np.array(target_list, dtype='U')
 
     feats_table = Table.from_pandas(features)
 
