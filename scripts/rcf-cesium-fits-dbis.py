@@ -34,6 +34,8 @@ for band in bands:
 
     feats_table = Table.from_pandas(features)
 
+    import pdb;pdb.set_trace()
+
     out_path = f'/home/miranda/ztf-rapid/data/interim/rcf_cesium_features_{band}.fits'
     print(out_path)
 
