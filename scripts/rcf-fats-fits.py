@@ -4,6 +4,8 @@ from FATS.Feature import FeatureSpace
 from astropy.table import Table
 import dask
 
+dask.distributed.client = Client(threads_per_worker=4, n_workers=1)
+
 def get_features(feature_space, fluxes, times, errors):
     this_fs = feature_space.calculateFeature(np.array([fluxes, times, errors]))
     return this_fs.result(method='dict')
