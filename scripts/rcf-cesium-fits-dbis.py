@@ -14,11 +14,7 @@ for band in bands:
     values_list = list()
     errors_list = list()
     target_list = list()
-    i = 0
     for ztfid, lc in lc_data.items():
-        if i == 5:
-            break
-        i += 1
         lc = lc[lc['band'] == band]
         if len(lc) < 2:
             continue
