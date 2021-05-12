@@ -25,11 +25,11 @@ for band in bands:
         target_list.append(lc.meta['classification'])
 
     # features = featurize_time_series(times=times_list, values=values_list, errors=errors_list, features_to_use=GENERAL_FEATS + CADENCE_FEATS + LOMB_SCARGLE_FEATS, scheduler='single-threaded')
-    features = featurize_time_series(times=times_list, values=values_list, errors=errors_list, features_to_use=GENERAL_FEATS + CADENCE_FEATS, scheduler='single-threaded')
+    # features = featurize_time_series(times=times_list, values=values_list, errors=errors_list, features_to_use=GENERAL_FEATS + CADENCE_FEATS, scheduler='single-threaded')
+    features = featurize_time_series(times=times_list, values=values_list, errors=errors_list, features_to_use=GENERAL_FEATS + CADENCE_FEATS)
 
     features.columns = features.columns.droplevel(1)
     features['ztfid'] = ztfid_list
-    features = features.set_index('ztfid')
     features['target'] = np.array(target_list, dtype='U')
 
     feats_table = Table.from_pandas(features)
