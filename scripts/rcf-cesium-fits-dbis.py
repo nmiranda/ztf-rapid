@@ -33,5 +33,5 @@ for band in bands:
 
     feats_table = Table.from_pandas(features)
 
-    feats_table.write('/home/miranda/ztf-rapid/data/interim/rcf_cesium_features_{}.fits'.format(band), format='fits', overwrite=True)
+    feats_table.write('/home/miranda/ztf-rapid/data/interim/rcf_cesium_features_{band}.fits', format='fits', overwrite=True)
 
