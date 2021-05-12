@@ -22,7 +22,7 @@ for band in bands:
         feature_space = feature_space.calculateFeature(np.array([this_fluxes, this_times, this_errors]))
         this_result = feature_space.result()
         # results_list.append(feature_space.result())
-        print(Table(this_result))
+        print(this_result)
         exit(0)
 
     
