@@ -8,9 +8,11 @@ bands = ('p48g', 'p48r', 'p48i')
 lc_data = pd.read_pickle('/home/miranda/ztf-rapid/data/interim/rcf_marshallc_sncosmo_200114_2018classupdate_addedcv_nozeroes.pkl')
 
 for band in bands:
+
     ztfid_list = list()
     target_list = list()
     results_list = list()
+
     for ztfid, lc in lc_data.items():
         lc = lc[lc['band'] == band]
         if len(lc) <= 2:
@@ -22,7 +24,13 @@ for band in bands:
         feature_space = feature_space.calculateFeature(np.array([this_fluxes, this_times, this_errors]))
         this_result = feature_space.result(method='dict')
         results_list.append(this_result)
-        break
-    print(pd.DataFrame(results_list))
 
+    features = pd.DataFrame(results_list)
+    features['ztfid'] = ztfid_list
+    features = features.set_index('ztfid')
+    features['target'] = target_list
+
+    feats_table = Table.from_pandas(features)
+
+    feats_table.write('/home/miranda/ztf-rapid/data/interim/rcf_fats_features_{}.fits'.format(band), format='fits', overwrite=True)
     
