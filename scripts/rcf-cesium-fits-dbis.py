@@ -12,6 +12,7 @@ for band in bands:
     ztfid_list = list()
     times_list = list()
     values_list = list()
+    errors_list = list()
     target_list = list()
     for ztfid, lc in lc_data.items():
         lc = lc[lc['band'] == band]
@@ -20,9 +21,10 @@ for band in bands:
         ztfid_list.append(ztfid)
         times_list.append(lc['mjd'])
         values_list.append(lc['flux'])
+        errors_list.append(lc['flux'])
         target_list.append(lc.meta['classification'])
 
-    features = featurize_time_series(times=times_list, values=values_list, features_to_use=GENERAL_FEATS + CADENCE_FEATS + LOMB_SCARGLE_FEATS)
+    features = featurize_time_series(times=times_list, values=values_list, errors=errors_list, features_to_use=GENERAL_FEATS + CADENCE_FEATS + LOMB_SCARGLE_FEATS)
 
     features.columns = features.columns.droplevel(1)
     features['ztfid'] = ztfid_list
