@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from FATS.Feature import FeatureSpace
 from astropy.table import Table
+from tqdm import tqdm
 
 bands = ('p48g', 'p48r', 'p48i')
 # exclude_list = ['interp1d', 'FluxPercentileRatioMid20', 'FluxPercentileRatioMid35', 'FluxPercentileRatioMid50', 'FluxPercentileRatioMid65', 'FluxPercentileRatioMid80', 'PercentDifferenceFluxPercentile']
@@ -15,7 +16,7 @@ for band in bands:
     target_list = list()
     results_list = list()
 
-    for ztfid, lc in lc_data.items():
+    for ztfid, lc in tqdm(lc_data.items()):
         lc = lc[lc['band'] == band]
         if len(lc) < 2:
             continue
