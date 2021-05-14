@@ -16,6 +16,7 @@ setup(
             'tune-model=models.tune_model:main',
             'noisify=data.noisify:main',
             'make-dataset-plasticc=data.make_plasticc_dataset:main',
+            'snguess=models.snguess:main',
             ],
     }
 )
