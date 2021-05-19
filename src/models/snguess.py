@@ -211,7 +211,6 @@ def main(no_alert_feats, task, test_size):
             dtest_ndet = xgb.DMatrix(X_test_ndet, label=y_test_ndet)
             y_pred_ndet = model.predict(dtest_ndet)
             precision_ndet.append(precision_score(y_test_ndet, y_pred_ndet, average=average))
-        print(precision_ndet)
 
         fig, ax = plt.subplots(figsize=(6.0/1.5, 4.8/1.5), dpi=200)
         ax.plot(range(3,50), precision_ndet)
@@ -222,6 +221,25 @@ def main(no_alert_feats, task, test_size):
         fig.savefig('precision_ndet.svg')
         mlflow.log_artifact('precision_ndet.svg')
 
+        precision_jd = list()
+        days_since_first_det = X_test['t_lc'].apply(lambda x: int(x))
+        for days in range(2,50):
+            mask = days_since_first_det == days
+            X_test_jd = X_test[mask]
+            y_test_jd = y_test[mask]
+            dtest_jd = xgb.DMatrix(X_test_jd, label=y_test_jd)
+            y_pred_jd = model.predict(dtest_jd)
+            precision_jd.append(precision_score(y_test_jd, y_pred_jd, average=average))
+
+        fig, ax = plt.subplots(figsize=(6.0/1.5, 4.8/1.5), dpi=200)
+        ax.plot(range(2,50), precision_jd)
+        ax.set_ylim(bottom=0.0, top=1.1)
+        ax.set_ylabel("Precision")
+        ax.set_xlabel("Days since first detection")
+        fig.tight_layout()
+        fig.savefig('precision_jd.svg')
+        mlflow.log_artifact('precision_jd.svg')
+        
         # client = MlflowClient()
         # runs = client.search_runs([experiment_id], "tags.mlflow.parentRunId = '{run_id}' ".format(run_id=run.info.run_id))
         # best_val_train = _inf
