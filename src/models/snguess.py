@@ -10,7 +10,7 @@ import xgboost as xgb
 from hyperopt import STATUS_OK, fmin, hp, rand
 from mlflow.tracking.client import MlflowClient
 from sklearn.metrics import f1_score, precision_score
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GroupShuffleSplit
 from ztfrapid.ztf_rapid import plot_confusion_matrix
 import matplotlib.pyplot as plt
 
@@ -132,18 +132,28 @@ def main(no_alert_feats, task, test_size):
         num_class = None
         average = 'binary'
         class_names = ['non-RCF', 'RCF']
+        groups = features['snname']
     else:
         y = 1*features['rcf_sn'] + 2*features['rcf_agn'] + 3*features['rcf_cv']
-        X = X[y != 0]
-        y = y[y != 0]
+        mask_class_only = y != 0
+        X = X[mask_class_only]
+        y = y[mask_class_only]
         y = y - 1
         objective = "multi:softmax"
         eval_metric = "merror"
         num_class = 3
         average = 'weighted'
         class_names = ['SN', 'galaxy', 'stellar']
+        groups = features[mask_class_only]['snname']
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=42)
+    group_shuffle_split = GroupShuffleSplit(n_splits=1, test_size=test_size, random_state=42)
+    train_idx, test_idx = next(group_shuffle_split.split(X, y, groups=groups))
+    X_train = X.iloc[train_idx]
+    X_test = X.iloc[test_idx]
+    y_train = y.iloc[train_idx]
+    y_test = y.iloc[test_idx]
+
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=42)
 
     mlflow.xgboost.autolog()
 
@@ -239,7 +249,7 @@ def main(no_alert_feats, task, test_size):
         fig.tight_layout()
         fig.savefig('precision_jd.svg')
         mlflow.log_artifact('precision_jd.svg')
-        
+
         # client = MlflowClient()
         # runs = client.search_runs([experiment_id], "tags.mlflow.parentRunId = '{run_id}' ".format(run_id=run.info.run_id))
         # best_val_train = _inf
