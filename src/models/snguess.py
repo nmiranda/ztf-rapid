@@ -210,7 +210,7 @@ def main(no_alert_feats, task, test_size):
 
         mlflow.log_metrics({"precision": prec, "f1_score": f1})
 
-        plot_confusion_matrix(y_test, y_pred, class_names=class_names, normalize=None).figure_.savefig('confusion_matrix.svg')
+        plot_confusion_matrix(y_test, y_pred, class_names=class_names, normalize='true').figure_.savefig('confusion_matrix.svg')
         mlflow.log_artifact('confusion_matrix.svg')
 
         precision_ndet = list()
