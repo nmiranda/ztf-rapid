@@ -131,7 +131,7 @@ def main(no_alert_feats, task, test_size):
         eval_metric = "error"
         num_class = None
         average = 'binary'
-        class_names = ['non-RCF', 'RCF']
+        class_names = ['Other', 'Young SN']
         groups = features['snname']
     else:
         y = 1*features['rcf_sn'] + 2*features['rcf_agn'] + 3*features['rcf_cv']
