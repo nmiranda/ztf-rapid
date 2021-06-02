@@ -312,7 +312,7 @@ def true_pred_ensemble(y_test, y_pred_list, objids_test, class_names, cutoff=0.7
 
     return test_cut, pred_cut
 
-def plot_confusion_matrix(y_true, y_pred, class_names, normalize='true'):
+def plot_confusion_matrix(y_true, y_pred, class_names, normalize='true', dpi=200, figsize=(2,2)):
 
     cm = metrics.confusion_matrix(
         y_true, 
@@ -321,7 +321,7 @@ def plot_confusion_matrix(y_true, y_pred, class_names, normalize='true'):
     )
     cmd = metrics.ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
 
-    fig, ax = plt.subplots(dpi=160)
+    fig, ax = plt.subplots(dpi=dpi, figsize=figsize)
     return cmd.plot(
         cmap=plt.cm.Blues,
         ax=ax,
